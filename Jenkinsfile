@@ -12,8 +12,15 @@ pipeline {
         //     }
         // }
         
-        stage('Code Compile') {
+        stage('COmpile') {
+            agent {
+                docker {
+                    image 'maven'
+
+                }
+            }
             steps {
+                    sh 'sleep 100'
                     sh "mvn compile"
             }
         }
