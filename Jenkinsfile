@@ -1,85 +1,53 @@
-// pipeline {
-//     agent any
-    
-//     // environment{
-//     //     SCANNER_HOME= tool 'sonar-scanner'
-//     // }
-
-//     stages {
-//         // stage('Git Checkout ') {
-//         //     steps {
-//         //         git branch: 'main', changelog: false, poll: false, url: 'https://github.com/jaiswaladi246/SpringBoot-WebApplication.git'
-//         //     }
-//         // }
-        
-//         stage('COmpile') {
-//             agent {
-//                 docker {
-//                     image 'maven'
-
-//                 }
-//             }
-//             steps {
-//                     sh 'sleep 100'
-//                     sh "mvn compile"
-//             }
-//         }
-        
-//         stage('Run Test Cases') {
-//             steps {
-//                     sh "mvn test"
-//             }
-//         }
-        
-//         // stage('Sonarqube Analysis') {
-//         //     steps {
-//         //             withSonarQubeEnv('sonar-server') {
-//         //                 sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Java-WebApp \
-//         //                 -Dsonar.java.binaries=. \
-//         //                 -Dsonar.projectKey=Java-WebApp '''
-    
-//         //         }
-//         //     }
-//         // }
-        
-//         stage('Maven Build') {
-//             steps {
-//                     sh "mvn clean compile"
-//             }
-//         }
-        
-//         // stage('Docker Build & Push') {
-//         //     steps {
-//         //            script {
-//         //                withDockerRegistry(credentialsId: 'b289dc43-2ede-4bd0-95e8-75ca26100d8d', toolName: 'docker') {
-//         //                     sh "docker build -t webapp ."
-//         //                     sh "docker tag webapp adijaiswal/webapp:latest"
-//         //                     sh "docker push adijaiswal/webapp:latest "
-//         //                 }
-//         //            } 
-//         //     }
-//         // }
-        
-//         stage('Docker Image scan') {
-//             steps {
-//                     sh "trivy image adijaiswal/webapp:latest "
-//             }
-//         }
-        
-//     }
-// }
-
-
 pipeline {
-    agent any
-    options {
-        // Timeout counter starts AFTER agent is allocated
-        timeout(time: 1, unit: 'SECONDS')
+    agent {
+        label 'dev'
     }
     stages {
-        stage('Example') {
+        stage('Build') {
+            agent {
+                docker {
+                    image 'maven'
+                    label 'dev'
+                }
+            }
             steps {
-                echo 'Hello World'
+                sh 'ls -al'
+                sh 'mvn clean compile'
+            
+            }
+            post {
+                always {
+                    cleanWs()
+                }
+            }
+        }
+        stage('Test cases') {
+            agent {
+                docker {
+                    args '-u root'
+                    image 'maven'
+                    label 'dev'
+                }
+            }
+            steps {
+                sh 'mvn test'
+            }
+        }
+        // stage ('sonar scan'){        }
+        stage('Build & Push') {
+            agent {
+                label 'dev'
+            }
+            environment {
+                DOCKER_USERNAME = credentials('dockerhub_user')
+                DOCKER_PASSWORD = credentials('dockerhub-pass')
+                DOCKER_REPO = credentials('docker-repo')
+            }
+            steps {
+                // sh 'docker build -t spring-boot-app . '
+                sh 'docker tag spring-boot-app $DOCKER_REPO:v1 ' 
+                sh 'docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD'
+                sh 'docker push $DOCKER_REPO:v1'
             }
         }
     }
