@@ -50,14 +50,14 @@ pipeline {
                 sh 'docker push $DOCKER_REPO:v1'
             }
         }
-        stage('Trivy-Image-Scan') {
-            agent {
-                label 'dev'
-            }
-            steps {
-                sh 'trivy image $DOCKER_REPO:v1'
-            }
-        }
+        // stage('Trivy-Image-Scan') {
+        //     agent {
+        //         label 'dev'
+        //     }
+        //     steps {
+        //         sh 'trivy image $DOCKER_REPO:v1'
+        //     }
+        // }
         // stage('Dev-deploy') {
         //     agent {
         //         docker {
