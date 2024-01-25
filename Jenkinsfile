@@ -50,5 +50,28 @@ pipeline {
                 sh 'docker push $DOCKER_REPO:v1'
             }
         }
+        stage('Trivy-Image-Scan') {
+            agent {
+                label 'dev'
+            }
+            steps {
+                sh 'trivy image $DOCKER_REPO:v1'
+            }
+        }
+        // stage('Dev-deploy') {
+        //     agent {
+        //         docker {
+        //             image 'ci-image:latest'
+        //             label 'dev'
+        //         }
+        //     }
+        //     environment {
+        //         "" = ""
+        //     }
+        //     steps {
+        //         sh 'kubectl set-context ' 
+        //         sh 'helm deploy command'
+        //     }
+        // }
     }
 }
